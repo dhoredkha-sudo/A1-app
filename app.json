@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "A1",
+    "slug": "azim-r",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#07070A",
+    "android": {
+      "package": "com.a1.horrorplayer",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.WAKE_LOCK"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2a0309"
+      }
+    },
+    "plugins": [
+      "expo-audio",
+      [
+        "expo-media-library",
+        {
+          "granularPermissions": [
+            "audio"
+          ],
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
+    ],
+    "owner": "azim4apps-team",
+    "extra": {
+      "eas": {
+        "projectId": "9f0f6c06-2bb8-4e2c-b912-80ee4f14764d"
+      }
+    },
+    "icon": "./assets/icon.png"
+  }
+}

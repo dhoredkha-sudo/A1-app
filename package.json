@@ -1,0 +1,26 @@
+{
+  "name": "a1-horror-music-player",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "build:apk": "eas build -p android --profile preview",
+    "build:aab": "eas build -p android --profile production"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "11.4.1",
+    "expo": "~54.0.0",
+    "expo-audio": "~1.0.13",
+    "expo-document-picker": "~14.0.7",
+    "expo-font": "~14.0.9",
+    "expo-linear-gradient": "~15.0.7",
+    "expo-media-library": "~18.2.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-svg": "15.12.1",
+    "react-native-webview": "13.15.0"
+  }
+}
