@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Image, BackHandler,
+  useWindowDimensions, View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Image, BackHandler,
   Alert, Modal, ActivityIndicator, Platform, StatusBar, Pressable, Animated, Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -83,33 +83,21 @@ const Ring = ({ size, progress, children }) => {
   );
 };
 
-// Spinning vinyl disc with red glow ring (spins only while playing, native driver)
-const Disc = ({ track, playing, size }) => {
-  const rot = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (playing) {
-      rot.stopAnimation((v) => {
-        const f = (v || 0) % 1;
-        rot.setValue(f);
-        Animated.timing(rot, { toValue: f + 2000, duration: 2000 * 14000, easing: Easing.linear, useNativeDriver: true }).start();
-      });
-    } else rot.stopAnimation();
-  }, [playing]);
-  const spin = rot.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const ring = size * 1.14, inner = size * 0.62;
-  return (
-    <View style={{ width: ring, height: ring, borderRadius: ring / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: C.red, shadowColor: C.crim, shadowOpacity: 1, shadowRadius: 30, elevation: 26 }}>
-      <LinearGradient colors={['#FF2448', '#5a0a1a']} style={{ position: 'absolute', width: ring, height: ring, borderRadius: ring / 2 }} />
-      <Animated.View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#0b0b0e', alignItems: 'center', justifyContent: 'center', transform: [{ rotate: spin }] }}>
-        {[0.94, 0.86, 0.78].map((k) => (
-          <View key={k} style={{ position: 'absolute', width: size * k, height: size * k, borderRadius: size * k / 2, borderWidth: 1, borderColor: '#ffffff14' }} />
-        ))}
-        <Art track={track} size={inner} round />
-        <View style={{ position: 'absolute', width: size * 0.08, height: size * 0.08, borderRadius: size * 0.04, backgroundColor: '#0b0b0e', borderWidth: 1, borderColor: '#ffffff22' }} />
-      </Animated.View>
-    </View>
-  );
-};
+// Big static cover (no animation = no stutter)
+const CoverArt = ({ track, size }) => (
+  <View style={{ width: size, height: size, borderRadius: 24, backgroundColor: C.burg, shadowColor: C.crim, shadowOpacity: 0.9, shadowRadius: 26, elevation: 22 }}>
+    {track && track.art ? (
+      <Image source={{ uri: track.art }} style={{ width: size, height: size, borderRadius: 24 }} />
+    ) : (
+      <LinearGradient colors={['#8a0b24', '#33050f', '#0c0307']} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }}
+        style={{ width: size, height: size, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ff244855', overflow: 'hidden' }}>
+        <Ionicons name="skull" size={size * 0.46} color="#f2e9e4" />
+        <Ionicons name="musical-notes" size={size * 0.16} color={C.crim} style={{ position: 'absolute', right: size * 0.1, bottom: size * 0.09 }} />
+        <Text style={{ position: 'absolute', left: size * 0.07, top: size * 0.06, color: '#ffffff55', fontWeight: '800', letterSpacing: 3 }}>A1</Text>
+      </LinearGradient>
+    )}
+  </View>
+);
 
 const TrackRow = React.memo(({ t, active, fav, onPress, onMore }) => (
   <TouchableOpacity onPress={onPress} style={[s.row, active && { borderColor: C.crim }]} activeOpacity={0.8}>
@@ -436,6 +424,7 @@ function Settings({ a }) {
 /* ============================== NOW PLAYING ============================== */
 function NowPlaying({ a }) {
   const ins = useSafeAreaInsets();
+  const win = useWindowDimensions();
   const t = a.cur;
   const [w, setW] = useState(1);
   const [showQ, setShowQ] = useState(false);
@@ -453,7 +442,7 @@ function NowPlaying({ a }) {
             <Text style={{ color: C.white, fontWeight: '700' }}>Now Playing</Text>
             <Text style={{ color: '#7b7b86', fontSize: 11 }}>{t.src === 'online' ? 'Internet Archive' : 'Local file'}</Text>
           </View>
-          <TouchableOpacity onPress={() => setShowQ(!showQ)} hitSlop={10}><Ionicons name={showQ ? 'disc' : 'list'} size={24} color={C.silver} /></TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowQ(!showQ)} hitSlop={10}><Ionicons name={showQ ? 'image' : 'list'} size={24} color={C.silver} /></TouchableOpacity>
         </View>
         {showQ ? (
           <FlatList data={a.queue} keyExtractor={(x, i) => x.id + i} style={{ marginTop: 16 }}
@@ -465,7 +454,7 @@ function NowPlaying({ a }) {
             )} />
         ) : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Disc track={t} playing={!!a.status.playing} size={250} />
+            <CoverArt track={t} size={Math.min(win.width - 48, win.height * 0.42, 400)} />
           </View>
         )}
         {a.error ? <Text style={{ color: C.crim, textAlign: 'center', marginBottom: 6 }}>{a.error}</Text> : null}
