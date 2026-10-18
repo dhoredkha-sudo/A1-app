@@ -11,6 +11,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as DocumentPicker from 'expo-document-picker';
 import { WebView } from 'react-native-webview';
 import Svg, { Circle } from 'react-native-svg';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createAudioPlayer, setAudioModeAsync, useAudioPlayerStatus } from 'expo-audio';
 
 /* ============================== THEME / HELPERS ============================== */
@@ -199,6 +200,7 @@ function Home({ a }) {
             <Text style={s.h2}>YouTube</Text>
             <Btn icon="logo-youtube" label="Open YouTube search" onPress={() => a.setTab('Search')} />
           </View>
+          <Text style={{ color: '#6d6d78', textAlign: 'center', marginTop: 30, fontSize: 12 }}>Developed by Azim R</Text>
         </View>
       )} />
   );
@@ -404,6 +406,14 @@ function Settings({ a }) {
       renderItem={() => (
         <View>
           <Text style={s.title}>Settings</Text>
+          <View style={s.dev}>
+            <Image source={require('./assets/azim.jpg')} style={s.devImg} />
+            <View style={{ marginLeft: 16, flex: 1 }}>
+              <Text style={s.rowS}>Developed by</Text>
+              <Text style={{ color: C.white, fontSize: 22, fontWeight: '800', marginTop: 2 }}>Azim R</Text>
+              <Text style={[s.rowS, { color: C.crim }]}>A1 · v{VERSION}</Text>
+            </View>
+          </View>
           <Text style={s.h2}>Library permission</Text>
           <Text style={s.rowS}>Audio access: {a.perm}. A1 only asks for audio access and notifications.</Text>
           <Btn icon="shield-checkmark" label="Request audio permission" onPress={a.scan} style={{ marginTop: 8 }} />
@@ -425,6 +435,7 @@ function Settings({ a }) {
 
 /* ============================== NOW PLAYING ============================== */
 function NowPlaying({ a }) {
+  const ins = useSafeAreaInsets();
   const t = a.cur;
   const [w, setW] = useState(1);
   const [showQ, setShowQ] = useState(false);
@@ -435,7 +446,7 @@ function NowPlaying({ a }) {
   const pct = dur ? Math.min(1, pos / dur) : 0;
   return (
     <Modal visible={a.showNP} animationType="slide" onRequestClose={() => a.setShowNP(false)}>
-      <LinearGradient colors={['#1d1d22', '#0e0e11', '#07070A']} style={{ flex: 1, paddingTop: TOP, paddingHorizontal: 22 }}>
+      <LinearGradient colors={['#1d1d22', '#0e0e11', '#07070A']} style={{ flex: 1, paddingTop: TOP, paddingHorizontal: 22, paddingBottom: ins.bottom + 8 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <TouchableOpacity onPress={() => a.setShowNP(false)} hitSlop={10}><Ionicons name="chevron-down" size={28} color={C.silver} /></TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
@@ -517,7 +528,8 @@ function MiniPlayer({ a }) {
 }
 
 /* ============================== APP ROOT ============================== */
-export default function App() {
+function Main() {
+  const ins = useSafeAreaInsets();
   const [tab, setTab] = useState('Home');
   const [data, setData] = useState(DEFAULT_DATA);
   const [loaded, setLoaded] = useState(false);
@@ -561,10 +573,12 @@ export default function App() {
     try {
       player.replace({ uri: t.uri });
       player.play();
+    } catch (e) { setError('Cannot play this file (missing or unsupported format).'); }
+    try {
       player.setActiveForLockScreen(true,
         { title: t.title, artist: t.artist, albumTitle: t.src === 'online' ? 'Internet Archive' : 'A1', artworkUrl: t.art },
         { showSeekBackward: true, showSeekForward: true });
-    } catch (e) { setError('Cannot play this file (missing or unsupported format).'); }
+    } catch (e) {}
     setData((d) => ({
       ...d,
       recent: [t, ...d.recent.filter((x) => x.id !== t.id)].slice(0, 30),
@@ -675,7 +689,7 @@ export default function App() {
         {tab === 'Settings' && <Settings a={a} />}
       </View>
       <MiniPlayer a={a} />
-      <View style={s.nav}>
+      <View style={[s.nav, { paddingBottom: ins.bottom + 12, paddingTop: 10 }]}>
         {tabs.map(([n, ic]) => (
           <TouchableOpacity key={n} style={{ flex: 1, alignItems: 'center' }} onPress={() => setTab(n)}>
             <Ionicons name={tab === n ? ic : ic + '-outline'} size={22} color={tab === n ? C.crim : C.silver} />
@@ -710,7 +724,7 @@ export default function App() {
       {/* Add-to-playlist / new-playlist sheet */}
       <Modal visible={!!picker} transparent animationType="fade" onRequestClose={() => setPicker(null)}>
         <Pressable style={s.backdrop} onPress={() => setPicker(null)}>
-          <Pressable style={s.sheet}>
+          <Pressable style={[s.sheet, { paddingBottom: 18 + ins.bottom }]}>
             {picker && !picker.newOnly ? (
               <View>
                 <Text style={s.h2}>{picker.title}</Text>
@@ -730,6 +744,14 @@ export default function App() {
         </Pressable>
       </Modal>
     </View>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Main />
+    </SafeAreaProvider>
   );
 }
 
@@ -756,7 +778,9 @@ const s = StyleSheet.create({
   emptyT: { color: C.white, fontSize: 16, fontWeight: '700', marginTop: 10 },
   emptyS: { color: C.silver, textAlign: 'center', marginTop: 6 },
   emptyInline: { color: '#8a8a95' },
-  nav: { flexDirection: 'row', backgroundColor: C.card, paddingVertical: 8, borderTopWidth: 1, borderTopColor: C.burg },
+  nav: { flexDirection: 'row', backgroundColor: C.card, borderTopWidth: 1, borderTopColor: C.burg },
+  dev: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 20, padding: 16, marginTop: 16, marginBottom: 6, borderWidth: 1, borderColor: C.burg },
+  devImg: { width: 84, height: 84, borderRadius: 42, borderWidth: 2, borderColor: C.crim },
   mini: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#17171c', marginHorizontal: 10, marginBottom: 6, padding: 10, borderRadius: 26, borderWidth: 1, borderColor: '#2a1016' },
   big: { width: 70, height: 70, borderRadius: 35, backgroundColor: C.crim, alignItems: 'center', justifyContent: 'center', shadowColor: C.crim, shadowOpacity: 1, shadowRadius: 18, elevation: 22 },
   time: { color: '#7b7b86', fontSize: 11 },
